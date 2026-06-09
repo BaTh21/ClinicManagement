@@ -78,7 +78,7 @@ def top_doctors(limit: int = 5, db: Session = Depends(get_db), _ = Depends(requi
 
 @router.get("/appointments-trend")
 def appointments_trend(
-    range: str = Query("week", regex="^(day|week|month|year)$"),
+    range: str = Query("week", pattern="^(day|week|month|year)$"),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):

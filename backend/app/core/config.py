@@ -6,12 +6,14 @@ if not os.getenv("RENDER"):
 
 class Settings:
     DATABASE_URL: str = os.getenv("DATABASE_URL")
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "your-super-secret-key-change-this")
+    SECRET_KEY: str = os.getenv("SECRET_KEY")
     ALGORITHM: str = os.getenv("ALGORITHM", "HS256")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
     def __init__(self):
         if not self.DATABASE_URL:
-            raise ValueError("❌ DATABASE_URL environment variable is not set!")
+            raise ValueError("DATABASE_URL environment variable is not set on Render")
+        if not self.SECRET_KEY:
+            raise ValueError("SECRET_KEY environment variable is not set on Render")
 
 settings = Settings()
