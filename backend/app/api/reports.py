@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, case
 from datetime import datetime, timedelta
 from typing import Optional
 from app.core.database import get_db
@@ -75,3 +75,121 @@ def top_doctors(limit: int = 5, db: Session = Depends(get_db), _ = Depends(requi
      .order_by(func.count(Appointment.id).desc())\
      .limit(limit).all()
     return [{"id": r.id, "name": f"{r.first_name} {r.last_name}", "appointments": r.appointment_count} for r in results]
+
+@router.get("/appointments-trend")
+def appointments_trend(
+    range: str = Query("week", regex="^(day|week|month|year)$"),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Returns appointment counts grouped by day, week, month, or year."""
+    end_date = datetime.now()
+    if range == "day":
+        start_date = end_date - timedelta(days=1)
+        group_by = func.date_trunc('hour', Appointment.appointment_time)
+        label_format = "%Y-%m-%d %H:00"
+    elif range == "week":
+        start_date = end_date - timedelta(days=7)
+        group_by = func.date(Appointment.appointment_time)
+        label_format = "%Y-%m-%d"
+    elif range == "month":
+        start_date = end_date - timedelta(days=30)
+        group_by = func.date(Appointment.appointment_time)
+        label_format = "%Y-%m-%d"
+    else:  # year
+        start_date = end_date - timedelta(days=365)
+        group_by = func.date_trunc('month', Appointment.appointment_time)
+        label_format = "%Y-%m"
+
+    results = db.query(
+        group_by.label("period"),
+        func.count(Appointment.id).label("count")
+    ).filter(
+        Appointment.appointment_time >= start_date
+    ).group_by("period").order_by("period").all()
+
+    data = [{"period": r.period.strftime(label_format), "count": r.count} for r in results]
+    return {"data": data, "range": range}
+
+@router.get("/revenue-trend")
+def revenue_trend(
+    year: int = Query(default=None),
+    db: Session = Depends(get_db),
+    current_user = Depends(require_role("admin"))
+):
+    """Monthly revenue for a given year (default: current year)."""
+    if not year:
+        year = datetime.now().year
+    start_date = datetime(year, 1, 1)
+    end_date = datetime(year, 12, 31)
+    results = db.query(
+        func.date_trunc('month', Invoice.created_at).label("month"),
+        func.sum(Invoice.amount).label("total")
+    ).filter(
+        Invoice.created_at.between(start_date, end_date),
+        Invoice.status == "paid"
+    ).group_by("month").order_by("month").all()
+    
+    data = [{"month": r.month.strftime("%Y-%m"), "revenue": float(r.total)} for r in results]
+    return {"data": data, "year": year}
+
+@router.get("/patient-growth")
+def patient_growth(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Returns cumulative patient count per month (running total)."""
+    patients = db.query(Patient.created_at).order_by(Patient.created_at).all()
+    if not patients:
+        return {"data": []}
+    
+    from collections import defaultdict
+    monthly_new = defaultdict(int)
+    for p in patients:
+        month_key = p.created_at.strftime("%Y-%m")
+        monthly_new[month_key] += 1
+    
+    months = sorted(monthly_new.keys())
+    cumulative = 0
+    data = []
+    for month in months:
+        cumulative += monthly_new[month]
+        data.append({"month": month, "cumulative": cumulative})
+    
+    return {"data": data}
+
+@router.get("/patient-stats")
+def patient_stats(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Returns gender distribution, new patients this month, and monthly registrations."""
+    gender_counts = db.query(
+        Patient.gender,
+        func.count(Patient.id).label("count")
+    ).filter(Patient.gender.isnot(None)).group_by(Patient.gender).all()
+    gender_distribution = [{"name": g.gender, "value": g.count} for g in gender_counts]
+    
+    today = datetime.now()
+    first_day_of_month = datetime(today.year, today.month, 1)
+    new_this_month = db.query(func.count(Patient.id)).filter(
+        Patient.created_at >= first_day_of_month
+    ).scalar() or 0
+    
+    last_year = first_day_of_month - timedelta(days=365)
+    monthly = db.query(
+        func.date_trunc('month', Patient.created_at).label("month"),
+        func.count(Patient.id).label("count")
+    ).filter(Patient.created_at >= last_year)\
+     .group_by("month").order_by("month").all()
+    
+    monthly_registrations = []
+    for m in monthly:
+        month_str = m.month.strftime("%Y-%m")
+        monthly_registrations.append({"month": month_str, "count": m.count})
+    
+    return {
+        "gender_distribution": gender_distribution,
+        "new_this_month": new_this_month,
+        "monthly_registrations": monthly_registrations
+    }
