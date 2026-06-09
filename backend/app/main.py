@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.database import engine, Base
@@ -10,6 +12,10 @@ from app.api import reports
 from app.api import users
 
 Base.metadata.create_all(bind=engine)
+if os.getenv("RENDER") != "true":
+    Base.metadata.create_all(bind=engine)
+
+app = FastAPI()
 
 app = FastAPI(title="Clinic Management System")
 
