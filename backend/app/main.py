@@ -6,7 +6,8 @@ from app.api import (
     medical_records, prescriptions, billing
 )
 import app.models
-from app.api import reports  # ensures all tables are created
+from app.api import reports
+from app.api import users
 
 Base.metadata.create_all(bind=engine)
 
@@ -28,7 +29,7 @@ app.include_router(medical_records.router, prefix="/api")
 app.include_router(prescriptions.router, prefix="/api")
 app.include_router(billing.router, prefix="/api")
 app.include_router(reports.router, prefix="/api")
-
+app.include_router(users.router, prefix="/api") 
 @app.get("/")
 def root():
     return {"message": "Clinic Management API"}

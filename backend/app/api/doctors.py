@@ -1,7 +1,6 @@
-from typing import Optional
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from typing import Optional
 from app.core.database import get_db
 from app.crud.doctor import doctor
 from app.schemas.doctor import DoctorCreate, DoctorUpdate, DoctorResponse
@@ -15,19 +14,11 @@ def list_doctors(
     limit: int = 100,
     specialization: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user)   # any authenticated user
 ):
     if specialization:
         return doctor.get_by_specialization(db, specialization)
     return doctor.get_multi(db, skip=skip, limit=limit)
-
-@router.post("/", response_model=DoctorResponse)
-def create_doctor(
-    doctor_in: DoctorCreate,
-    db: Session = Depends(get_db),
-    _ = Depends(require_role("admin"))
-):
-    return doctor.create(db, obj_in=doctor_in)
 
 @router.get("/{doctor_id}", response_model=DoctorResponse)
 def get_doctor(
@@ -39,6 +30,15 @@ def get_doctor(
     if not db_doctor:
         raise HTTPException(404, "Doctor not found")
     return db_doctor
+
+# POST, PUT, DELETE remain with admin only
+@router.post("/", response_model=DoctorResponse)
+def create_doctor(
+    doctor_in: DoctorCreate,
+    db: Session = Depends(get_db),
+    _ = Depends(require_role("admin"))
+):
+    return doctor.create(db, obj_in=doctor_in)
 
 @router.put("/{doctor_id}", response_model=DoctorResponse)
 def update_doctor(
