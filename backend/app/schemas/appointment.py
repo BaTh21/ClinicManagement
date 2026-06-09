@@ -21,5 +21,7 @@ class AppointmentUpdate(BaseModel):
 
 class AppointmentResponse(AppointmentBase):
     id: int
+    patient_name: Optional[str] = None
+    doctor_name: Optional[str] = None
     class Config:
         from_attributes = True

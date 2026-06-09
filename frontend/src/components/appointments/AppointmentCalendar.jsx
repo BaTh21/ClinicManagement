@@ -20,10 +20,22 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
-export default function AppointmentCalendar({ appointments }) {
+export default function AppointmentCalendar({ appointments, patients, doctors }) {
+  // Helper to get patient name
+  const getPatientName = (patientId) => {
+    const patient = patients.find(p => p.id === patientId);
+    return patient ? `${patient.first_name} ${patient.last_name}` : `Patient ${patientId}`;
+  };
+
+  // Helper to get doctor name
+  const getDoctorName = (doctorId) => {
+    const doctor = doctors.find(d => d.id === doctorId);
+    return doctor ? `Dr. ${doctor.first_name} ${doctor.last_name}` : `Doctor ${doctorId}`;
+  };
+
   const events = appointments.map((a) => ({
     id: a.id,
-    title: `Dr. ${a.doctor_id} - Patient ${a.patient_id}`,
+    title: `${getPatientName(a.patient_id)} - ${getDoctorName(a.doctor_id)}`,
     start: new Date(a.appointment_time),
     end: new Date(new Date(a.appointment_time).getTime() + 30 * 60000),
   }));
