@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import func, case
+from sqlalchemy import asc, desc, func, case
 from datetime import datetime, timedelta
 from typing import Optional
 from app.core.database import get_db
@@ -12,22 +12,38 @@ from app.models.doctor import Doctor
 
 router = APIRouter(prefix="/reports", tags=["Reports"])
 
-@router.get("/appointments-by-date")
+@router.get("/appointments-by-date/")
 def appointment_report(
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
+    reverse: bool = Query(False, description="Set True for descending order (DESC), False for ascending (ASC)"),
     db: Session = Depends(get_db),
     _ = Depends(require_role("admin"))
 ):
+    # Set default date range (last 30 days)
     if not start_date:
         start_date = datetime.now() - timedelta(days=30)
     if not end_date:
         end_date = datetime.now()
-    results = db.query(
+
+    # Build query: group by date and count appointments
+    query = db.query(
         func.date(Appointment.appointment_time).label("date"),
         func.count(Appointment.id).label("count")
-    ).filter(Appointment.appointment_time.between(start_date, end_date))\
-     .group_by(func.date(Appointment.appointment_time)).all()
+    ).filter(
+        Appointment.appointment_time.between(start_date, end_date)
+    ).group_by(
+        func.date(Appointment.appointment_time)
+    )
+
+    # Apply sorting: ASC by default (reverse=False), DESC if reverse=True
+    if reverse:
+        query = query.order_by(desc("date"))
+    else:
+        query = query.order_by(asc("date"))
+
+    results = query.all()
+
     return [{"date": r.date, "count": r.count} for r in results]
 
 @router.get("/revenue")

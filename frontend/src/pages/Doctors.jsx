@@ -17,7 +17,6 @@ import {
   Snackbar,
   Alert,
   TextField,
-  MenuItem,
   Stack,
 } from '@mui/material';
 
@@ -88,11 +87,10 @@ export default function Doctors() {
     fetchDoctors();
   };
 
-  // 🔍 SEARCH + SORT LOGIC
+  // SEARCH + SORT LOGIC
   const filteredDoctors = useMemo(() => {
     let data = [...doctors];
 
-    // SEARCH (global)
     if (search) {
       data = data.filter((d) =>
         Object.values(d)
@@ -102,16 +100,13 @@ export default function Doctors() {
       );
     }
 
-    // SORT
     data.sort((a, b) => {
       const valA = (a[sortField] || '').toString().toLowerCase();
       const valB = (b[sortField] || '').toString().toLowerCase();
 
-      if (sortOrder === 'asc') {
-        return valA.localeCompare(valB);
-      } else {
-        return valB.localeCompare(valA);
-      }
+      return sortOrder === 'asc'
+        ? valA.localeCompare(valB)
+        : valB.localeCompare(valA);
     });
 
     return data;
@@ -131,6 +126,7 @@ export default function Doctors() {
         }}
       >
         <Box display="flex" justifyContent="space-between" alignItems="center">
+          
           <Box>
             <Typography variant="h4" fontWeight="bold">
               Doctors
@@ -140,30 +136,40 @@ export default function Doctors() {
             </Typography>
           </Box>
 
+          {/* ✅ NEW MODERN ADD BUTTON */}
           {user?.role === 'admin' && (
             <Button
               variant="contained"
               startIcon={<AddIcon />}
               onClick={() => setOpenDialog(true)}
               sx={{
-                bgcolor: '#fff',
+                background: 'linear-gradient(135deg, #ffffff 0%, #e3f2fd 100%)',
                 color: '#1976d2',
-                fontWeight: 'bold',
-                borderRadius: 2,
-                '&:hover': { bgcolor: '#eee' },
+                fontWeight: 700,
+                borderRadius: 3,
+                px: 2.5,
+                py: 1,
+                textTransform: 'none',
+                boxShadow: '0 6px 20px rgba(0,0,0,0.15)',
+                transition: 'all 0.25s ease',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+                  background: '#fff',
+                },
               }}
             >
               Add Doctor
             </Button>
           )}
+
         </Box>
       </Paper>
 
-      {/* SEARCH + SORT BAR */}
+      {/* SEARCH + SORT */}
       <Paper sx={{ p: 2, mb: 2, borderRadius: 3 }}>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-          
-          {/* SEARCH */}
+
           <TextField
             fullWidth
             label="Search doctors..."
@@ -171,7 +177,6 @@ export default function Doctors() {
             onChange={(e) => setSearch(e.target.value)}
           />
 
-          {/* SORT ORDER */}
           <Button
             variant="outlined"
             onClick={() =>
@@ -187,6 +192,7 @@ export default function Doctors() {
           >
             {sortOrder.toUpperCase()}
           </Button>
+
         </Stack>
       </Paper>
 
@@ -199,6 +205,7 @@ export default function Doctors() {
         ) : (
           <TableContainer>
             <Table>
+
               <TableHead>
                 <TableRow sx={{ bgcolor: '#1976d2' }}>
                   {['ID','First Name','Last Name','Specialization','Email','Phone'].map((h)=>(
@@ -206,6 +213,7 @@ export default function Doctors() {
                       {h}
                     </TableCell>
                   ))}
+
                   {user?.role === 'admin' && (
                     <TableCell sx={{ color:'#fff', fontWeight:'bold' }}>
                       Actions
@@ -224,6 +232,7 @@ export default function Doctors() {
                 ) : (
                   filteredDoctors.map((d) => (
                     <TableRow key={d.id} hover>
+
                       <TableCell>{d.id}</TableCell>
                       <TableCell>{d.first_name}</TableCell>
                       <TableCell>{d.last_name}</TableCell>
@@ -241,19 +250,21 @@ export default function Doctors() {
 
                       {user?.role === 'admin' && (
                         <TableCell>
-                          <IconButton color="primary" onClick={()=>handleEdit(d)}>
+                          <IconButton color="primary" onClick={() => handleEdit(d)}>
                             <EditIcon />
                           </IconButton>
 
-                          <IconButton color="error" onClick={()=>handleDelete(d.id)}>
+                          <IconButton color="error" onClick={() => handleDelete(d.id)}>
                             <DeleteIcon />
                           </IconButton>
                         </TableCell>
                       )}
+
                     </TableRow>
                   ))
                 )}
               </TableBody>
+
             </Table>
           </TableContainer>
         )}

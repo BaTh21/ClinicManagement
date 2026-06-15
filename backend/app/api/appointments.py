@@ -16,14 +16,16 @@ def list_appointments(
     patient_id: Optional[int] = None,
     doctor_id: Optional[int] = None,
     date: Optional[datetime] = None,
+    order_by: Optional[str] = Query("appointment_time", description="Sort by appointment_time, patient_id, doctor_id, status"),
+    desc: bool = Query(False),
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)   # any authenticated user
+    current_user = Depends(get_current_user)
 ):
     if patient_id:
-        return appointment.get_by_patient(db, patient_id)
+        return appointment.get_by_patient(db, patient_id, order_by=order_by, descending=desc)
     if doctor_id and date:
-        return appointment.get_by_doctor_and_date(db, doctor_id, date)
-    return appointment.get_multi(db, skip=skip, limit=limit)
+        return appointment.get_by_doctor_and_date(db, doctor_id, date, order_by=order_by, descending=desc)
+    return appointment.get_multi(db, skip=skip, limit=limit, order_by=order_by, descending=desc)
 
 @router.get("/{appointment_id}", response_model=AppointmentResponse)
 def get_appointment(

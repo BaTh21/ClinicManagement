@@ -1,5 +1,6 @@
+from sqlalchemy import asc, desc
 from sqlalchemy.orm import Session
-from typing import Generic, TypeVar, Type, List, Optional
+from typing import Any, Generic, TypeVar, Type, List, Optional, Union
 from pydantic import BaseModel
 from app.core.database import Base
 
@@ -14,8 +15,26 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def get(self, db: Session, id: int) -> Optional[ModelType]:
         return db.query(self.model).filter(self.model.id == id).first()
 
-    def get_multi(self, db: Session, skip: int = 0, limit: int = 100) -> List[ModelType]:
-        return db.query(self.model).offset(skip).limit(limit).all()
+    def get_multi(
+        self, db: Session, *, skip: int = 0, limit: int = 100,
+        order_by: Optional[Union[str, Any]] = None, descending: bool = False
+    ) -> List[ModelType]:
+        query = db.query(self.model)
+        if order_by is None:
+            # Default: sort by id ASC
+            query = query.order_by(asc(self.model.id))
+        else:
+            if isinstance(order_by, str):
+                order_by_column = getattr(self.model, order_by, None)
+                if order_by_column is None:
+                    raise ValueError(f"Invalid column: {order_by}")
+            else:
+                order_by_column = order_by
+            if descending:
+                query = query.order_by(desc(order_by_column))
+            else:
+                query = query.order_by(asc(order_by_column))
+        return query.offset(skip).limit(limit).all()
 
     def create(self, db: Session, obj_in: CreateSchemaType) -> ModelType:
         obj_in_data = obj_in.dict()

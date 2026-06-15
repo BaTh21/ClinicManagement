@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import Optional
 from app.core.database import get_db
@@ -13,12 +13,14 @@ def list_doctors(
     skip: int = 0,
     limit: int = 100,
     specialization: Optional[str] = None,
+    order_by: Optional[str] = Query("id", description="Sort by id, first_name, last_name, specialization"),
+    desc: bool = Query(False),
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)   # any authenticated user
+    current_user = Depends(get_current_user)
 ):
     if specialization:
-        return doctor.get_by_specialization(db, specialization)
-    return doctor.get_multi(db, skip=skip, limit=limit)
+        return doctor.get_by_specialization(db, specialization, order_by=order_by, descending=desc)
+    return doctor.get_multi(db, skip=skip, limit=limit, order_by=order_by, descending=desc)
 
 @router.get("/{doctor_id}", response_model=DoctorResponse)
 def get_doctor(

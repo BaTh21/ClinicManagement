@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import func
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import asc, func
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import get_password_hash
@@ -12,10 +12,24 @@ router = APIRouter(prefix="/users", tags=["Users"])
 
 # GET all users (admin only)
 @router.get("/", response_model=List[UserResponse])
-def get_users(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+def get_users(
+    order_by: str = Query("id", description="id, username, email, role"),
+    desc: bool = Query(False),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
     if current_user.role != "admin":
         raise HTTPException(403, "Only admin can list users")
-    return db.query(User).all()
+    query = db.query(User)
+    if hasattr(User, order_by):
+        column = getattr(User, order_by)
+        if desc:
+            query = query.order_by(desc(column))
+        else:
+            query = query.order_by(asc(column))
+    else:
+        query = query.order_by(asc(User.id))
+    return query.all()
 
 # CREATE user (admin only)
 @router.post("/", response_model=UserResponse)

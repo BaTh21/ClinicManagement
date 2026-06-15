@@ -8,18 +8,19 @@ from app.core.dependencies import get_current_user, require_role
 
 router = APIRouter(prefix="/patients", tags=["Patients"])
 
-# ✅ Allow any authenticated user to list patients
 @router.get("/", response_model=list[PatientResponse])
 def list_patients(
     skip: int = 0,
     limit: int = 100,
-    search: Optional[str] = Query(None),
+    search: Optional[str] = None,
+    order_by: Optional[str] = Query("id", description="Sort by id, first_name, last_name, email"),
+    desc: bool = Query(False, description="True for descending order"),
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)   # any logged-in user
+    current_user = Depends(get_current_user)
 ):
     if search:
-        return patient.search_by_name(db, search)
-    return patient.get_multi(db, skip=skip, limit=limit)
+        return patient.search_by_name(db, search, order_by=order_by, descending=desc)
+    return patient.get_multi(db, skip=skip, limit=limit, order_by=order_by, descending=desc)
 
 # ✅ Allow any authenticated user to get a single patient
 @router.get("/{patient_id}", response_model=PatientResponse)

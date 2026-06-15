@@ -14,9 +14,8 @@ from app.api import users
 Base.metadata.create_all(bind=engine)
 if os.getenv("RENDER") != "true":
     Base.metadata.create_all(bind=engine)
-
+    
 app = FastAPI()
-
 app = FastAPI(title="Clinic Management System")
 
 app.add_middleware(

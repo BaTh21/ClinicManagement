@@ -1,5 +1,5 @@
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.crud.prescription import prescription 
@@ -14,12 +14,15 @@ def list_prescriptions(
     skip: int = 0,
     limit: int = 100,
     patient_id: Optional[int] = None,
+    order_by: str = Query("created_at"),
+    desc: bool = Query(False),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
     if patient_id:
-        return db.query(Prescription).filter(Prescription.patient_id == patient_id).offset(skip).limit(limit).all()
-    return prescription.get_multi(db, skip=skip, limit=limit)
+        # Add a method prescription.get_by_patient with sorting
+        return prescription.get_by_patient(db, patient_id, order_by=order_by, descending=desc)
+    return prescription.get_multi(db, skip=skip, limit=limit, order_by=order_by, descending=desc)
 
 @router.post("/", response_model=PrescriptionResponse)
 def create_prescription(

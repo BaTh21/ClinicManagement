@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.crud.medical_record import medical_record
@@ -9,7 +9,7 @@ from app.core.dependencies import get_current_user, require_role
 
 router = APIRouter(prefix="/medical-records", tags=["Medical Records"])
 
-@router.get("/", response_model=list[MedicalRecordResponse])
+@router.get("", response_model=list[MedicalRecordResponse])
 def list_medical_records(
     skip: int = 0,
     limit: int = 100,
@@ -21,7 +21,7 @@ def list_medical_records(
         return medical_record.get_by_patient(db, patient_id)
     return medical_record.get_multi(db, skip=skip, limit=limit)
 
-@router.post("/", response_model=MedicalRecordResponse)
+@router.post("", response_model=MedicalRecordResponse)
 def create_medical_record(
     record_in: MedicalRecordCreate,
     db: Session = Depends(get_db),
