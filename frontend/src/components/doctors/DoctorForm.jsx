@@ -11,6 +11,7 @@ import {
   InputAdornment,
   Typography,
   Divider,
+  Paper,
 } from '@mui/material';
 import {
   Person,
@@ -45,7 +46,6 @@ export default function DoctorForm({ doctor, onClose }) {
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    // Clear error when user starts typing
     if (error) setError('');
   };
 
@@ -63,12 +63,11 @@ export default function DoctorForm({ doctor, onClose }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!validateForm()) return;
-    
+
     setSubmitting(true);
     setError('');
-    
+
     try {
       if (doctor) {
         await updateDoctor(doctor.id, form);
@@ -87,16 +86,15 @@ export default function DoctorForm({ doctor, onClose }) {
 
   return (
     <>
-      {/* Enhanced Header with Icon */}
       <DialogTitle
         sx={{
           background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
           color: '#fff',
-          fontWeight: 'bold',
           display: 'flex',
           alignItems: 'center',
-          gap: 1,
-          pb: 2,
+          gap: 1.5,
+          fontWeight: 'bold',
+          py: 2,
         }}
       >
         <LocalHospital sx={{ fontSize: 28 }} />
@@ -107,257 +105,303 @@ export default function DoctorForm({ doctor, onClose }) {
 
       <Divider />
 
-      <DialogContent sx={{ p: 3 }}>
-        <Box component="form" onSubmit={handleSubmit}>
-          {/* Error Alert */}
-          {error && (
-            <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
-              {error}
-            </Alert>
-          )}
+      <DialogContent sx={{ p: 0, bgcolor: '#f8faff' }}>
+        <Paper
+          elevation={0}
+          sx={{
+            m: 3,
+            p: 3,
+            borderRadius: 3,
+            backgroundColor: '#ffffff',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
+            border: '1px solid #eef2f6',
+          }}
+        >
+          <Box component="form" onSubmit={handleSubmit}>
+            {/* Error Alert */}
+            {error && (
+              <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
+                {error}
+              </Alert>
+            )}
 
-          <Grid container spacing={3}>
             {/* First Name */}
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="First Name"
-                name="first_name"
-                value={form.first_name}
-                onChange={handleChange}
-                required
-                variant="outlined"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Person color="primary" />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2,
-                    transition: 'all 0.2s ease',
-                    '&:hover': {
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: '#42a5f5',
-                      },
+            <Grid container spacing={2} alignItems="center" sx={{ mb: 1.5 }}>
+              <Grid item xs={4} sm={3}>
+                <Typography variant="body2" fontWeight={600} color="text.secondary" align="right">
+                  First Name
+                </Typography>
+              </Grid>
+              <Grid item xs={8} sm={9}>
+                <TextField
+                  fullWidth
+                  name="first_name"
+                  value={form.first_name}
+                  onChange={handleChange}
+                  required
+                  variant="outlined"
+                  size="small"
+                  placeholder="e.g. John"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Person color="primary" fontSize="small" />
+                      </InputAdornment>
+                    ),
+                    sx: { borderRadius: 2 },
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: '#fafcff',
+                      '&:hover fieldset': { borderColor: '#90caf9' },
+                      '&.Mui-focused fieldset': { borderColor: '#1976d2' },
                     },
-                  },
-                }}
-              />
+                  }}
+                />
+              </Grid>
             </Grid>
 
             {/* Last Name */}
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Last Name"
-                name="last_name"
-                value={form.last_name}
-                onChange={handleChange}
-                required
-                variant="outlined"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Person color="primary" />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2,
-                    '&:hover': {
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: '#42a5f5',
-                      },
+            <Grid container spacing={2} alignItems="center" sx={{ mb: 1.5 }}>
+              <Grid item xs={4} sm={3}>
+                <Typography variant="body2" fontWeight={600} color="text.secondary" align="right">
+                  Last Name
+                </Typography>
+              </Grid>
+              <Grid item xs={8} sm={9}>
+                <TextField
+                  fullWidth
+                  name="last_name"
+                  value={form.last_name}
+                  onChange={handleChange}
+                  required
+                  variant="outlined"
+                  size="small"
+                  placeholder="e.g. Doe"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Person color="primary" fontSize="small" />
+                      </InputAdornment>
+                    ),
+                    sx: { borderRadius: 2 },
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: '#fafcff',
+                      '&:hover fieldset': { borderColor: '#90caf9' },
+                      '&.Mui-focused fieldset': { borderColor: '#1976d2' },
                     },
-                  },
-                }}
-              />
+                  }}
+                />
+              </Grid>
             </Grid>
 
             {/* Specialization */}
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Specialization"
-                name="specialization"
-                value={form.specialization}
-                onChange={handleChange}
-                variant="outlined"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <MedicalServices color="primary" />
-                    </InputAdornment>
-                  ),
-                }}
-                helperText="e.g., Cardiology, Pediatrics, Orthopedics"
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2,
-                    '&:hover': {
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: '#42a5f5',
-                      },
+            <Grid container spacing={2} alignItems="center" sx={{ mb: 1.5 }}>
+              <Grid item xs={4} sm={3}>
+                <Typography variant="body2" fontWeight={600} color="text.secondary" align="right">
+                  Specialization
+                </Typography>
+              </Grid>
+              <Grid item xs={8} sm={9}>
+                <TextField
+                  fullWidth
+                  name="specialization"
+                  value={form.specialization}
+                  onChange={handleChange}
+                  variant="outlined"
+                  size="small"
+                  placeholder="e.g. Cardiology"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <MedicalServices color="primary" fontSize="small" />
+                      </InputAdornment>
+                    ),
+                    sx: { borderRadius: 2 },
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: '#fafcff',
+                      '&:hover fieldset': { borderColor: '#90caf9' },
+                      '&.Mui-focused fieldset': { borderColor: '#1976d2' },
                     },
-                  },
-                }}
-              />
+                  }}
+                />
+              </Grid>
             </Grid>
 
             {/* Phone */}
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Phone Number"
-                name="phone"
-                value={form.phone}
-                onChange={handleChange}
-                variant="outlined"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Phone color="primary" />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2,
-                    '&:hover': {
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: '#42a5f5',
-                      },
+            <Grid container spacing={2} alignItems="center" sx={{ mb: 1.5 }}>
+              <Grid item xs={4} sm={3}>
+                <Typography variant="body2" fontWeight={600} color="text.secondary" align="right">
+                  Phone
+                </Typography>
+              </Grid>
+              <Grid item xs={8} sm={9}>
+                <TextField
+                  fullWidth
+                  name="phone"
+                  value={form.phone}
+                  onChange={handleChange}
+                  variant="outlined"
+                  size="small"
+                  placeholder="+855 123-4567"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Phone color="primary" fontSize="small" />
+                      </InputAdornment>
+                    ),
+                    sx: { borderRadius: 2 },
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: '#fafcff',
+                      '&:hover fieldset': { borderColor: '#90caf9' },
+                      '&.Mui-focused fieldset': { borderColor: '#1976d2' },
                     },
-                  },
-                }}
-              />
+                  }}
+                />
+              </Grid>
             </Grid>
 
             {/* Email */}
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label="Email Address"
-                name="email"
-                type="email"
-                value={form.email}
-                onChange={handleChange}
-                variant="outlined"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Email color="primary" />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2,
-                    '&:hover': {
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: '#42a5f5',
-                      },
+            <Grid container spacing={2} alignItems="center" sx={{ mb: 1.5 }}>
+              <Grid item xs={4} sm={3}>
+                <Typography variant="body2" fontWeight={600} color="text.secondary" align="right">
+                  Email
+                </Typography>
+              </Grid>
+              <Grid item xs={8} sm={9}>
+                <TextField
+                  fullWidth
+                  name="email"
+                  type="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  variant="outlined"
+                  size="small"
+                  placeholder="name@example.com"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Email color="primary" fontSize="small" />
+                      </InputAdornment>
+                    ),
+                    sx: { borderRadius: 2 },
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: '#fafcff',
+                      '&:hover fieldset': { borderColor: '#90caf9' },
+                      '&.Mui-focused fieldset': { borderColor: '#1976d2' },
                     },
-                  },
-                }}
-              />
+                  }}
+                />
+              </Grid>
             </Grid>
 
             {/* Qualification */}
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Qualification"
-                name="qualification"
-                value={form.qualification}
-                onChange={handleChange}
-                variant="outlined"
-                multiline
-                rows={2}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <School color="primary" />
-                    </InputAdornment>
-                  ),
-                }}
-                helperText="Medical degree, certifications, etc."
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2,
-                    '&:hover': {
-                      '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: '#42a5f5',
-                      },
+            <Grid container spacing={2} alignItems="flex-start" sx={{ mb: 1.5 }}>
+              <Grid item xs={4} sm={3}>
+                <Typography variant="body2" fontWeight={600} color="text.secondary" align="right" sx={{ mt: 1 }}>
+                  Qualification
+                </Typography>
+              </Grid>
+              <Grid item xs={8} sm={9}>
+                <TextField
+                  fullWidth
+                  name="qualification"
+                  value={form.qualification}
+                  onChange={handleChange}
+                  multiline
+                  rows={2}
+                  variant="outlined"
+                  size="small"
+                  placeholder="MD, PhD, certifications..."
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start" sx={{ alignSelf: 'flex-start', mt: 1 }}>
+                        <School color="primary" fontSize="small" />
+                      </InputAdornment>
+                    ),
+                    sx: { borderRadius: 2 },
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: '#fafcff',
+                      '&:hover fieldset': { borderColor: '#90caf9' },
+                      '&.Mui-focused fieldset': { borderColor: '#1976d2' },
                     },
-                  },
-                }}
-              />
+                  }}
+                />
+              </Grid>
             </Grid>
-          </Grid>
 
-          {/* Action Buttons */}
-          <Box
-            mt={4}
-            display="flex"
-            justifyContent="flex-end"
-            gap={2}
-            sx={{
-              pt: 2,
-              borderTop: '1px solid',
-              borderColor: 'divider',
-            }}
-          >
-            <Button
-              onClick={onClose}
-              variant="outlined"
-              startIcon={<Cancel />}
-              disabled={submitting}
+            {/* Action Buttons */}
+            <Box
+              mt={4}
+              display="flex"
+              justifyContent="flex-end"
+              gap={2}
               sx={{
-                borderRadius: 2,
-                px: 3,
-                py: 1,
-                textTransform: 'none',
-                fontWeight: 600,
-                '&:hover': {
-                  transform: 'translateY(-1px)',
-                  boxShadow: 1,
-                },
-                transition: 'all 0.2s ease',
+                pt: 2,
+                borderTop: '1px solid',
+                borderColor: 'divider',
               }}
             >
-              Cancel
-            </Button>
+              <Button
+                onClick={onClose}
+                variant="outlined"
+                startIcon={<Cancel />}
+                disabled={submitting}
+                sx={{
+                  borderRadius: 2,
+                  px: 3,
+                  py: 1,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  borderColor: '#d0d7e0',
+                  color: '#5a6a7a',
+                  '&:hover': {
+                    transform: 'translateY(-1px)',
+                    boxShadow: 1,
+                    borderColor: '#b0bcc8',
+                  },
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                Cancel
+              </Button>
 
-            <Button
-              type="submit"
-              variant="contained"
-              startIcon={submitting ? <CircularProgress size={20} color="inherit" /> : <Save />}
-              disabled={submitting}
-              sx={{
-                background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
-                borderRadius: 2,
-                px: 4,
-                py: 1,
-                textTransform: 'none',
-                fontWeight: 700,
-                boxShadow: '0 4px 12px rgba(25, 118, 210, 0.3)',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #1565c0 0%, #1e88e5 100%)',
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 6px 16px rgba(25, 118, 210, 0.4)',
-                },
-                transition: 'all 0.2s ease',
-              }}
-            >
-              {submitting ? 'Saving...' : isEdit ? 'Update Doctor' : 'Save Doctor'}
-            </Button>
+              <Button
+                type="submit"
+                variant="contained"
+                startIcon={submitting ? <CircularProgress size={20} color="inherit" /> : <Save />}
+                disabled={submitting}
+                sx={{
+                  background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
+                  borderRadius: 2,
+                  px: 4,
+                  py: 1,
+                  textTransform: 'none',
+                  fontWeight: 700,
+                  boxShadow: '0 4px 12px rgba(25, 118, 210, 0.3)',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #1565c0 0%, #1e88e5 100%)',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 6px 16px rgba(25, 118, 210, 0.4)',
+                  },
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {submitting ? 'Saving...' : isEdit ? 'Update Doctor' : 'Save Doctor'}
+              </Button>
+            </Box>
           </Box>
-        </Box>
+        </Paper>
       </DialogContent>
     </>
   );
