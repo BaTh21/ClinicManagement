@@ -12,6 +12,7 @@ import PrintIcon from '@mui/icons-material/Print';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import { getInvoices, deleteInvoice } from '../services/invoice';
 import { getPatient, getPatients } from '../services/patient';
+import { getMedicalRecords } from '../services/medicalRecord';  // NEW import
 import InvoiceForm from '../components/billing/InvoiceForm';
 import { useAuth } from '../context/AuthContext';
 
@@ -24,6 +25,7 @@ export default function Billing() {
   const [editingInvoice, setEditingInvoice] = useState(null);
   const [printInvoice, setPrintInvoice] = useState(null);
   const [printPatient, setPrintPatient] = useState(null);
+  const [medicalRecords, setMedicalRecords] = useState([]); // NEW state
   const printRef = useRef();
 
   // Delete confirmation state
@@ -61,6 +63,7 @@ export default function Billing() {
     fetchPatients();
   }, []);
 
+  // Delete handlers
   const handleDeleteClick = (invoice) => {
     setDeleteDialog({
       open: true,
@@ -99,14 +102,19 @@ export default function Billing() {
       const patientRes = await getPatient(invoice.patient_id);
       setPrintPatient(patientRes.data);
       setPrintInvoice(invoice);
+
+      // FETCH MEDICAL RECORDS for the patient
+      const recordsRes = await getMedicalRecords({ patient_id: invoice.patient_id });
+      setMedicalRecords(recordsRes.data || []);
     } catch (err) {
-      console.error('Failed to load patient', err);
+      console.error('Failed to load print data', err);
     }
   };
 
   const closePrintDialog = () => {
     setPrintInvoice(null);
     setPrintPatient(null);
+    setMedicalRecords([]);
   };
 
   const handlePrintDialogPrint = () => {
@@ -137,6 +145,7 @@ export default function Billing() {
     <Box sx={{ p: 3, bgcolor: '#f0f4f8', minHeight: '100vh' }}>
       {/* Header */}
       <Paper
+        elevation={0}
         sx={{
           p: 3,
           mb: 3,
@@ -272,8 +281,9 @@ export default function Billing() {
         fullWidth
         PaperProps={{ sx: { borderRadius: 4, overflow: 'hidden' } }}
       >
-        {/* Header */}
+        {/* Header – will be hidden when printing */}
         <DialogTitle
+          className="no-print"
           sx={{
             background: 'linear-gradient(135deg, #004d7a 0%, #008793 100%)',
             color: '#fff',
@@ -287,12 +297,21 @@ export default function Billing() {
           <Typography variant="h6" fontWeight={700}>Invoice Preview</Typography>
         </DialogTitle>
 
-        <Divider />
+        <Divider className="no-print" />
 
         <DialogContent sx={{ p: 0, bgcolor: '#f5f7fb' }}>
+          {/* Print styles hidden from screen, active only when printing */}
+          <style>{`
+            @media print {
+              .no-print { display: none !important; }
+              body { background: white; }
+              .print-area { padding: 0 !important; margin: 0 !important; box-shadow: none !important; }
+            }
+          `}</style>
+
           {printInvoice && printPatient && (
             <Box ref={printRef} id="print-area">
-              {/* Professional Invoice Template */}
+              {/* Professional Invoice Template – same as before */}
               <Paper
                 elevation={0}
                 sx={{
@@ -365,10 +384,50 @@ export default function Billing() {
                     </div>
                   </div>
 
-                  {/* Description */}
+                  {/* Medical Records Section */}
+                  {medicalRecords.length > 0 && (
+                    <div style={{ marginBottom: 30 }}>
+                      <h3 style={{ fontSize: 14, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#64748b', marginBottom: 12, borderBottom: '1px solid #e2e8f0', paddingBottom: 4 }}>
+                        Medical Records
+                      </h3>
+                      {medicalRecords.map((record, idx) => (
+                        <div key={record.id || idx} style={{
+                          background: '#f8fafc',
+                          borderRadius: 8,
+                          padding: '12px 16px',
+                          marginBottom: 8,
+                          borderLeft: '4px solid #008793',
+                        }}>
+                          <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>
+                            {formatDate(record.record_date || record.created_at)}
+                          </div>
+                          {record.diagnosis && (
+                            <div style={{ marginBottom: 4 }}>
+                              <span style={{ fontWeight: 600, fontSize: 13, color: '#004d7a' }}>Diagnosis:</span>{' '}
+                              <span style={{ fontSize: 14, color: '#334155' }}>{record.diagnosis}</span>
+                            </div>
+                          )}
+                          {record.treatment && (
+                            <div style={{ marginBottom: 4 }}>
+                              <span style={{ fontWeight: 600, fontSize: 13, color: '#004d7a' }}>Treatment:</span>{' '}
+                              <span style={{ fontSize: 14, color: '#334155' }}>{record.treatment}</span>
+                            </div>
+                          )}
+                          {record.notes && (
+                            <div>
+                              <span style={{ fontWeight: 600, fontSize: 13, color: '#004d7a' }}>Notes:</span>{' '}
+                              <span style={{ fontSize: 14, color: '#334155' }}>{record.notes}</span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Invoice Description */}
                   <div style={{ marginBottom: 30 }}>
                     <h3 style={{ fontSize: 14, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#64748b', marginBottom: 8 }}>
-                      Description
+                      Invoice Description
                     </h3>
                     <p style={{
                       fontSize: 15,
@@ -415,7 +474,8 @@ export default function Billing() {
           )}
         </DialogContent>
 
-        <DialogActions sx={{ px: 3, pb: 2, bgcolor: '#f5f7fb' }}>
+        {/* Footer buttons – also hidden when printing */}
+        <DialogActions className="no-print" sx={{ px: 3, pb: 2, bgcolor: '#f5f7fb' }}>
           <Button onClick={closePrintDialog} variant="outlined" sx={{ borderRadius: 2, textTransform: 'none' }}>
             Close
           </Button>
