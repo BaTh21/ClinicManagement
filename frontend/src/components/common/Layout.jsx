@@ -16,6 +16,7 @@ import {
   Menu,
   MenuItem,
   Divider,
+  alpha,
 } from '@mui/material';
 
 import MenuIcon from '@mui/icons-material/Menu';
@@ -108,11 +109,13 @@ export default function Layout() {
 
   return (
     <Box sx={{ display: 'flex' }}>
-      {/* APP BAR */}
+      {/* APP BAR – blue → teal gradient, matching the Dashboard header */}
       <AppBar
         position="fixed"
         sx={{
           zIndex: (theme) => theme.zIndex.drawer + 1,
+          background: 'linear-gradient(135deg, #1A73E8 0%, #0D9488 100%)',
+          boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
         }}
       >
         <Toolbar>
@@ -129,33 +132,60 @@ export default function Layout() {
             variant="h6"
             noWrap
             component="div"
-            sx={{ flexGrow: 1 }}
+            sx={{ flexGrow: 1, fontWeight: 600, letterSpacing: '0.5px' }}
           >
             Clinic Management System
           </Typography>
 
-          <Button color="inherit" onClick={handleMenuOpen}>
-            <Avatar sx={{ width: 32, height: 32, mr: 1 }}>
+          <Button
+            color="inherit"
+            onClick={handleMenuOpen}
+            sx={{
+              textTransform: 'none',
+              '&:hover': { backgroundColor: alpha('#fff', 0.1) },
+            }}
+          >
+            <Avatar
+              sx={{
+                width: 32,
+                height: 32,
+                mr: 1,
+                bgcolor: '#2E7D32', // soft green for user avatar
+                color: '#fff',
+                fontWeight: 600,
+              }}
+            >
               {user?.username?.charAt(0)?.toUpperCase()}
             </Avatar>
 
-            {drawerOpen && user?.username}
+            {drawerOpen && (
+              <Typography variant="body2" fontWeight={500}>
+                {user?.username}
+              </Typography>
+            )}
           </Button>
 
           <Menu
             anchorEl={anchorEl}
             open={Boolean(anchorEl)}
             onClose={handleMenuClose}
+            PaperProps={{
+              sx: {
+                mt: 1.5,
+                borderRadius: 3,
+                boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+              },
+            }}
           >
             <MenuItem onClick={handleLogout}>
-              <LogoutIcon fontSize="small" sx={{ mr: 1 }} />
-              Logout
+              <LogoutIcon fontSize="small" sx={{ mr: 1, color: '#1A73E8' }} />
+              <Typography variant="body2">Logout</Typography>
             </MenuItem>
           </Menu>
         </Toolbar>
       </AppBar>
 
-      {/* SIDEBAR */}
+      {/* SIDEBAR – clean white with subtle accents */}
       <Drawer
         variant="permanent"
         sx={{
@@ -171,21 +201,39 @@ export default function Layout() {
                 duration: 200,
               }),
             boxSizing: 'border-box',
-            borderRight: '1px solid #e0e0e0',
+            borderRight: '1px solid',
+            borderColor: alpha('#0D9488', 0.15),
+            backgroundColor: '#FFFFFF',
           },
         }}
       >
-        <Toolbar>
+        {/* Sidebar header */}
+        <Toolbar
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: drawerOpen ? 'flex-start' : 'center',
+            px: 2,
+          }}
+        >
           {drawerOpen && (
-            <Typography variant="h6" noWrap>
+            <Typography
+              variant="h6"
+              noWrap
+              sx={{
+                color: '#1A73E8',
+                fontWeight: 700,
+                letterSpacing: '0.3px',
+              }}
+            >
               Clinic System
             </Typography>
           )}
         </Toolbar>
 
-        <Divider />
+        <Divider sx={{ borderColor: alpha('#0D9488', 0.15) }} />
 
-        <List>
+        <List sx={{ pt: 1 }}>
           {menuItems.map((item) => (
             <ListItemButton
               key={item.text}
@@ -194,6 +242,14 @@ export default function Layout() {
                 minHeight: 50,
                 justifyContent: drawerOpen ? 'initial' : 'center',
                 px: 2,
+                mx: 1,
+                borderRadius: 3,
+                mb: 0.5,
+                transition: 'all 0.2s',
+                '&:hover': {
+                  backgroundColor: alpha('#1A73E8', 0.08),
+                },
+                // active state can be added via location later
               }}
             >
               <ListItemIcon
@@ -201,6 +257,7 @@ export default function Layout() {
                   minWidth: 0,
                   mr: drawerOpen ? 2 : 0,
                   justifyContent: 'center',
+                  color: '#1A73E8',
                 }}
               >
                 {item.icon}
@@ -208,6 +265,11 @@ export default function Layout() {
 
               <ListItemText
                 primary={item.text}
+                primaryTypographyProps={{
+                  fontWeight: 500,
+                  fontSize: '0.9rem',
+                  color: '#334155',
+                }}
                 sx={{
                   opacity: drawerOpen ? 1 : 0,
                   transition: 'opacity 0.2s',
@@ -218,13 +280,15 @@ export default function Layout() {
         </List>
       </Drawer>
 
-      {/* MAIN CONTENT */}
+      {/* MAIN CONTENT – light background matching the Dashboard */}
       <Box
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
+          p: { xs: 2, md: 3 },
           mt: 8,
+          backgroundColor: '#F8FAFC',
+          minHeight: '100vh',
           transition: 'all 0.2s ease',
         }}
       >

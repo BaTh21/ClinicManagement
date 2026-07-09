@@ -18,8 +18,9 @@ import { Button } from '@mui/material';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
-// Updated color palette – soft, modern, teal-accented
-const COLORS = ['#008793', '#004d7a', '#ff9800', '#2e7d32', '#9c27b0'];
+// Updated clean, healthcare‑friendly palette
+// Primary blue (#1A73E8), secondary teal (#0D9488), green (#2E7D32), soft amber (#F59E0B)
+const COLORS = ['#1A73E8', '#0D9488', '#2E7D32', '#F59E0B', '#6D28D9'];
 
 const CustomTooltip = ({ active, payload, label, currency = false }) => {
   if (active && payload && payload.length) {
@@ -160,35 +161,35 @@ export default function Dashboard() {
     if (newYear) setRevenueYear(newYear);
   };
 
-  // KPI cards with updated colors and soft background matching the teal theme
+  // KPI cards with the new palette – clean, distinct, and gentle on the eye
   const kpiCards = [
     { 
       title: 'Total Patients', 
       value: stats.patients, 
       icon: <PeopleIcon fontSize="large" />, 
-      color: '#008793', 
-      bg: alpha('#008793', 0.08) 
+      color: '#1A73E8',       // Primary Blue
+      bg: alpha('#1A73E8', 0.08) 
     },
     { 
       title: 'Total Doctors', 
       value: stats.doctors, 
       icon: <LocalHospitalIcon fontSize="large" />, 
-      color: '#2e7d32', 
-      bg: alpha('#2e7d32', 0.08) 
+      color: '#2E7D32',       // Health Green
+      bg: alpha('#2E7D32', 0.08) 
     },
     { 
       title: 'Appointments', 
       value: stats.appointments, 
       icon: <CalendarTodayIcon fontSize="large" />, 
-      color: '#ed6c02', 
-      bg: alpha('#ed6c02', 0.08) 
+      color: '#0D9488',       // Soft Teal
+      bg: alpha('#0D9488', 0.08) 
     },
     { 
       title: 'Receptionists', 
       value: stats.receptionists, 
       icon: <PersonAddIcon fontSize="large" />, 
-      color: '#ff9800', 
-      bg: alpha('#ff9800', 0.08) 
+      color: '#F59E0B',       // Warm Amber (sparing accent)
+      bg: alpha('#F59E0B', 0.08) 
     },
   ];
   if (user?.role === 'admin') {
@@ -196,8 +197,8 @@ export default function Dashboard() {
       title: 'Revenue (USD)',
       value: `$${stats.revenue.toFixed(2)}`,
       icon: <ReceiptIcon fontSize="large" />,
-      color: '#9c27b0',
-      bg: alpha('#9c27b0', 0.08),
+      color: '#0F766E',       // Darker teal for emphasis
+      bg: alpha('#0F766E', 0.08),
     });
   }
 
@@ -206,15 +207,15 @@ export default function Dashboard() {
   };
 
   return (
-    <Box sx={{ p: 3, bgcolor: '#f0f4f8', minHeight: '100vh', borderRadius: 4 }}>
-      {/* Dashboard Header */}
+    <Box sx={{ p: 3, bgcolor: '#F8FAFC', minHeight: '100vh', borderRadius: 4 }}>
+      {/* Dashboard Header – blue to teal gradient */}
       <Box
         display="flex"
         justifyContent="space-between"
         alignItems="center"
         mb={3}
         sx={{
-          background: 'linear-gradient(135deg, #004d7a 0%, #008793 100%)',
+          background: 'linear-gradient(135deg, #1A73E8 0%, #0D9488 100%)',
           color: '#fff',
           p: 2,
           borderRadius: 4,
@@ -275,7 +276,7 @@ export default function Dashboard() {
             ))}
           </Grid>
 
-          {/* Patient Growth Chart – teal gradient */}
+          {/* Patient Growth Chart – primary blue gradient */}
           <Paper
             sx={{
               p: 3,
@@ -285,15 +286,15 @@ export default function Dashboard() {
               border: '1px solid #eef2f6',
             }}
           >
-            <Typography variant="h6" fontWeight={600} color="#004d7a" gutterBottom>
+            <Typography variant="h6" fontWeight={600} color="#1A73E8" gutterBottom>
               Total Patients Growth (Cumulative)
             </Typography>
             <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={patientGrowth}>
                 <defs>
                   <linearGradient id="patientGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#008793" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#008793" stopOpacity={0.05} />
+                    <stop offset="5%" stopColor="#1A73E8" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#1A73E8" stopOpacity={0.05} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -304,7 +305,7 @@ export default function Dashboard() {
                 <Area
                   type="monotone"
                   dataKey="cumulative"
-                  stroke="#008793"
+                  stroke="#1A73E8"
                   strokeWidth={3}
                   fill="url(#patientGradient)"
                   name="Total Patients"
@@ -313,7 +314,7 @@ export default function Dashboard() {
             </ResponsiveContainer>
           </Paper>
 
-          {/* Appointment Trend – teal/cyan gradient */}
+          {/* Appointment Trend – blue → teal gradient line */}
           <Paper
             sx={{
               p: 3,
@@ -324,7 +325,7 @@ export default function Dashboard() {
             }}
           >
             <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" mb={2}>
-              <Typography variant="h6" fontWeight={600} color="#004d7a">
+              <Typography variant="h6" fontWeight={600} color="#1A73E8">
                 Appointment Trend
               </Typography>
               <ToggleButtonGroup value={appointmentRange} exclusive onChange={handleAppointmentRangeChange} size="small">
@@ -338,8 +339,8 @@ export default function Dashboard() {
               <LineChart data={appointmentData}>
                 <defs>
                   <linearGradient id="appointmentGradient" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#004d7a" />
-                    <stop offset="100%" stopColor="#008793" />
+                    <stop offset="0%" stopColor="#1A73E8" />
+                    <stop offset="100%" stopColor="#0D9488" />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -352,15 +353,15 @@ export default function Dashboard() {
                   dataKey="count"
                   stroke="url(#appointmentGradient)"
                   strokeWidth={3}
-                  dot={{ r: 4, fill: '#008793', strokeWidth: 2, stroke: '#fff' }}
-                  activeDot={{ r: 6, fill: '#004d7a' }}
+                  dot={{ r: 4, fill: '#0D9488', strokeWidth: 2, stroke: '#fff' }}
+                  activeDot={{ r: 6, fill: '#1A73E8' }}
                   name="Appointments"
                 />
               </LineChart>
             </ResponsiveContainer>
           </Paper>
 
-          {/* Revenue Trend – admin only, green/teal gradient */}
+          {/* Revenue Trend – teal → blue gradient bars (admin only) */}
           {user?.role === 'admin' && (
             <Paper
               sx={{
@@ -371,7 +372,7 @@ export default function Dashboard() {
               }}
             >
               <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" mb={2}>
-                <Typography variant="h6" fontWeight={600} color="#004d7a">
+                <Typography variant="h6" fontWeight={600} color="#1A73E8">
                   Revenue Trend (Monthly)
                 </Typography>
                 <ToggleButtonGroup value={revenueYear} exclusive onChange={handleRevenueYearChange} size="small">
@@ -386,8 +387,8 @@ export default function Dashboard() {
                 <BarChart data={revenueData}>
                   <defs>
                     <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#008793" stopOpacity={0.9} />
-                      <stop offset="100%" stopColor="#004d7a" stopOpacity={0.6} />
+                      <stop offset="0%" stopColor="#0D9488" stopOpacity={0.9} />
+                      <stop offset="100%" stopColor="#1A73E8" stopOpacity={0.6} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
