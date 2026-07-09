@@ -11,6 +11,10 @@ import {
   TableRow,
   IconButton,
   Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Typography,
   Chip,
   TextField,
@@ -39,13 +43,16 @@ export default function Patients() {
   const [sortBy, setSortBy] = useState('id');
   const [sortOrder, setSortOrder] = useState('asc');
 
-  // Fetch patients with sorting parameters
+  // Delete confirmation state
+  const [deleteDialog, setDeleteDialog] = useState({
+    open: false,
+    patientId: null,
+    patientName: '',
+  });
+
   const fetchPatients = async () => {
     try {
-      const params = {
-        order_by: sortBy,
-        desc: sortOrder === 'desc'
-      };
+      const params = { order_by: sortBy, desc: sortOrder === 'desc' };
       const res = await getPatients(params);
       setPatients(res.data);
     } catch (error) {
@@ -67,15 +74,27 @@ export default function Patients() {
     );
   });
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Delete this patient?')) {
-      try {
-        await deletePatient(id);
-        fetchPatients();
-      } catch (error) {
-        console.error(error);
-      }
+  const handleDeleteClick = (patient) => {
+    setDeleteDialog({
+      open: true,
+      patientId: patient.id,
+      patientName: `${patient.first_name} ${patient.last_name}`,
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await deletePatient(deleteDialog.patientId);
+      fetchPatients();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setDeleteDialog({ open: false, patientId: null, patientName: '' });
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialog({ open: false, patientId: null, patientName: '' });
   };
 
   const handleEdit = (patient) => {
@@ -94,7 +113,7 @@ export default function Patients() {
 
   return (
     <Box sx={{ p: 3, bgcolor: '#f0f4f8', minHeight: '100vh' }}>
-      {/* Header – restyled with a soft gradient */}
+      {/* Header */}
       <Paper
         elevation={0}
         sx={{
@@ -110,61 +129,24 @@ export default function Patients() {
             <Typography variant="h4" fontWeight={700}>Patient Management</Typography>
             <Typography variant="body1" sx={{ opacity: 0.9 }}>Manage and monitor patient records</Typography>
           </Box>
-          <Chip
-            icon={<PersonIcon />}
-            label={`${filteredPatients.length} Patients`}
-            sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', fontWeight: 600 }}
-          />
+          <Chip icon={<PersonIcon />} label={`${filteredPatients.length} Patients`} sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', fontWeight: 600 }} />
         </Box>
       </Paper>
 
-      {/* Toolbar – softer card, cleaner inputs */}
-      <Paper
-        sx={{
-          p: 2,
-          mb: 2,
-          borderRadius: 3,
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 2,
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          backgroundColor: 'white',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
-        }}
-      >
+      {/* Toolbar */}
+      <Paper sx={{ p: 2, mb: 2, borderRadius: 3, display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'white', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
         <TextField
           placeholder="Search patients..."
           size="small"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          sx={{
-            flex: 1,
-            minWidth: 250,
-            '& .MuiOutlinedInput-root': {
-              borderRadius: 3,
-              backgroundColor: '#f8fafc',
-              '&:hover fieldset': { borderColor: '#90caf9' },
-              '&.Mui-focused fieldset': { borderColor: '#008793' }
-            }
-          }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon color="action" />
-              </InputAdornment>
-            )
-          }}
+          sx={{ flex: 1, minWidth: 250, '& .MuiOutlinedInput-root': { borderRadius: 3, backgroundColor: '#f8fafc', '&:hover fieldset': { borderColor: '#90caf9' }, '&.Mui-focused fieldset': { borderColor: '#008793' } } }}
+          InputProps={{ startAdornment: (<InputAdornment position="start"><SearchIcon color="action" /></InputAdornment>) }}
         />
         <Box display="flex" gap={2} flexWrap="wrap">
           <FormControl size="small" sx={{ minWidth: 120 }}>
             <InputLabel>Sort by</InputLabel>
-            <Select
-              value={sortBy}
-              label="Sort by"
-              onChange={(e) => setSortBy(e.target.value)}
-              sx={{ borderRadius: 3 }}
-            >
+            <Select value={sortBy} label="Sort by" onChange={(e) => setSortBy(e.target.value)} sx={{ borderRadius: 3 }}>
               <MenuItem value="id">ID</MenuItem>
               <MenuItem value="first_name">First Name</MenuItem>
               <MenuItem value="last_name">Last Name</MenuItem>
@@ -176,18 +158,7 @@ export default function Patients() {
               variant="contained"
               startIcon={<AddIcon />}
               onClick={() => setOpenDialog(true)}
-              sx={{
-                borderRadius: 3,
-                px: 3,
-                textTransform: 'none',
-                fontWeight: 600,
-                background: 'linear-gradient(135deg, #004d7a 0%, #008793 100%)',
-                boxShadow: '0 4px 14px rgba(0,141,145,0.25)',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #003a5c 0%, #006b7a 100%)',
-                  boxShadow: '0 6px 20px rgba(0,141,145,0.35)'
-                }
-              }}
+              sx={{ borderRadius: 3, px: 3, textTransform: 'none', fontWeight: 600, background: 'linear-gradient(135deg, #004d7a 0%, #008793 100%)', boxShadow: '0 4px 14px rgba(0,141,145,0.25)', '&:hover': { background: 'linear-gradient(135deg, #003a5c 0%, #006b7a 100%)', boxShadow: '0 6px 20px rgba(0,141,145,0.35)' } }}
             >
               Add Patient
             </Button>
@@ -195,16 +166,8 @@ export default function Patients() {
         </Box>
       </Paper>
 
-      {/* Table – softer header, rounded, subtle shadows */}
-      <TableContainer
-        component={Paper}
-        elevation={0}
-        sx={{
-          borderRadius: 4,
-          overflow: 'hidden',
-          boxShadow: '0 2px 12px rgba(0,0,0,0.06)'
-        }}
-      >
+      {/* Table */}
+      <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 4, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
         <Table>
           <TableHead>
             <TableRow sx={{ backgroundColor: '#004d7a' }}>
@@ -213,24 +176,13 @@ export default function Patients() {
               <TableCell sx={{ color: 'white', fontWeight: 700 }}>Last Name</TableCell>
               <TableCell sx={{ color: 'white', fontWeight: 700 }}>Email</TableCell>
               <TableCell sx={{ color: 'white', fontWeight: 700 }}>Phone</TableCell>
-              {canModify && (
-                <TableCell align="center" sx={{ color: 'white', fontWeight: 700 }}>
-                  Actions
-                </TableCell>
-              )}
+              {canModify && <TableCell align="center" sx={{ color: 'white', fontWeight: 700 }}>Actions</TableCell>}
             </TableRow>
           </TableHead>
           <TableBody>
             {filteredPatients.length > 0 ? (
               filteredPatients.map((p) => (
-                <TableRow
-                  key={p.id}
-                  hover
-                  sx={{
-                    transition: 'all 0.15s ease-in-out',
-                    '&:hover': { backgroundColor: '#f0f8ff' }
-                  }}
-                >
+                <TableRow key={p.id} hover sx={{ transition: 'all 0.15s ease-in-out', '&:hover': { backgroundColor: '#f0f8ff' } }}>
                   <TableCell>{p.id}</TableCell>
                   <TableCell>{p.first_name}</TableCell>
                   <TableCell>{p.last_name}</TableCell>
@@ -238,22 +190,10 @@ export default function Patients() {
                   <TableCell>{p.phone}</TableCell>
                   {canModify && (
                     <TableCell align="center">
-                      <IconButton
-                        onClick={() => handleEdit(p)}
-                        sx={{
-                          color: '#008793',
-                          '&:hover': { bgcolor: '#e0f7fa' }
-                        }}
-                      >
+                      <IconButton onClick={() => handleEdit(p)} sx={{ color: '#008793', '&:hover': { bgcolor: '#e0f7fa' } }}>
                         <EditIcon />
                       </IconButton>
-                      <IconButton
-                        onClick={() => handleDelete(p.id)}
-                        sx={{
-                          color: '#d32f2f',
-                          '&:hover': { bgcolor: '#ffebee' }
-                        }}
-                      >
+                      <IconButton onClick={() => handleDeleteClick(p)} sx={{ color: '#d32f2f', '&:hover': { bgcolor: '#ffebee' } }}>
                         <DeleteIcon />
                       </IconButton>
                     </TableCell>
@@ -271,15 +211,34 @@ export default function Patients() {
         </Table>
       </TableContainer>
 
-      {/* Dialog – unchanged logic, just enhanced rounding */}
+      {/* Add/Edit Patient Dialog */}
+      <Dialog open={openDialog} onClose={handleClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 4, p: 1 } }}>
+        <PatientForm patient={editingPatient} onClose={handleClose} />
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
       <Dialog
-        open={openDialog}
-        onClose={handleClose}
-        maxWidth="sm"
-        fullWidth
+        open={deleteDialog.open}
+        onClose={handleDeleteCancel}
+        aria-labelledby="delete-dialog-title"
         PaperProps={{ sx: { borderRadius: 4, p: 1 } }}
       >
-        <PatientForm patient={editingPatient} onClose={handleClose} />
+        <DialogTitle id="delete-dialog-title" sx={{ fontWeight: 700, color: '#d32f2f' }}>
+          Confirm Deletion
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to permanently delete patient <strong>{deleteDialog.patientName}</strong>? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={handleDeleteCancel} variant="outlined" sx={{ borderRadius: 2, textTransform: 'none' }}>
+            Cancel
+          </Button>
+          <Button onClick={handleDeleteConfirm} variant="contained" color="error" sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}>
+            Delete
+          </Button>
+        </DialogActions>
       </Dialog>
     </Box>
   );
