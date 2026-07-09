@@ -2,6 +2,8 @@ import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.core.database import engine, Base, SessionLocal
+from app.core.init_db import create_default_admin
 
 from app.core.database import engine, Base
 from app.api import (
@@ -24,6 +26,12 @@ app = FastAPI(title="Clinic Management System")
 @app.on_event("startup")
 def startup():
     Base.metadata.create_all(bind=engine)
+
+    db = SessionLocal()
+    try:
+        create_default_admin(db)
+    finally:
+        db.close()
 
 
 app.add_middleware(
