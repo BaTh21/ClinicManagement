@@ -1,5 +1,5 @@
 import React from 'react';
-import { Paper, Typography, Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar';
 import format from 'date-fns/format';
 import parse from 'date-fns/parse';
@@ -21,13 +21,11 @@ const localizer = dateFnsLocalizer({
 });
 
 export default function AppointmentCalendar({ appointments, patients, doctors }) {
-  // Helper to get patient name
   const getPatientName = (patientId) => {
     const patient = patients.find(p => p.id === patientId);
     return patient ? `${patient.first_name} ${patient.last_name}` : `Patient ${patientId}`;
   };
 
-  // Helper to get doctor name
   const getDoctorName = (doctorId) => {
     const doctor = doctors.find(d => d.id === doctorId);
     return doctor ? `Dr. ${doctor.first_name} ${doctor.last_name}` : `Doctor ${doctorId}`;
@@ -35,14 +33,14 @@ export default function AppointmentCalendar({ appointments, patients, doctors })
 
   const events = appointments.map((a) => ({
     id: a.id,
-    title: `${getPatientName(a.patient_id)} - ${getDoctorName(a.doctor_id)}`,
+    title: `${getPatientName(a.patient_id)} – ${getDoctorName(a.doctor_id)}`,
     start: new Date(a.appointment_time),
     end: new Date(new Date(a.appointment_time).getTime() + 30 * 60000),
   }));
 
   return (
-    <Paper sx={{ p: 2, height: '70vh' }}>
-      <Typography variant="h6" gutterBottom>
+    <Box>
+      <Typography variant="h6" fontWeight={600} color="#004d7a" mb={2}>
         Appointment Calendar
       </Typography>
       <Calendar
@@ -50,8 +48,19 @@ export default function AppointmentCalendar({ appointments, patients, doctors })
         events={events}
         startAccessor="start"
         endAccessor="end"
-        style={{ height: '90%' }}
+        style={{ height: '70vh' }}
+        eventPropGetter={() => ({
+          style: {
+            backgroundColor: '#008793',
+            borderRadius: '4px',
+            opacity: 0.9,
+            color: 'white',
+            border: 'none',
+            display: 'block',
+            fontWeight: 500,
+          },
+        })}
       />
-    </Paper>
+    </Box>
   );
 }
