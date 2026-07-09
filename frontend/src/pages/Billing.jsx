@@ -3,18 +3,21 @@ import {
   Box, Button, Paper, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, IconButton, Dialog, Typography, Chip,
   DialogTitle, DialogContent, DialogActions, CircularProgress,
-  Divider, Alert,
+  Divider,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import PrintIcon from '@mui/icons-material/Print';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import { getInvoices, deleteInvoice } from '../services/invoice';
 import { getPatient, getPatients } from '../services/patient';
 import { getMedicalRecords } from '../services/medicalRecord';
 import InvoiceForm from '../components/billing/InvoiceForm';
 import { useAuth } from '../context/AuthContext';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 export default function Billing() {
   const { user } = useAuth();
@@ -102,7 +105,6 @@ export default function Billing() {
       const patientRes = await getPatient(invoice.patient_id);
       setPrintPatient(patientRes.data);
       setPrintInvoice(invoice);
-
       const recordsRes = await getMedicalRecords({ patient_id: invoice.patient_id });
       setMedicalRecords(recordsRes.data || []);
     } catch (err) {
@@ -116,50 +118,24 @@ export default function Billing() {
     setMedicalRecords([]);
   };
 
-  // Print via a new window – only the invoice appears, but headers/footers are browser‑dependent
-  const handlePrintInvoice = () => {
-    if (!printInvoice || !printPatient) return;
+  // Download clean PDF using jsPDF + html2canvas
+  const handleDownloadPDF = async () => {
+    const element = document.getElementById('print-area');
+    if (!element) return;
 
-    const invoiceHTML = document.getElementById('print-area')?.innerHTML;
-    if (!invoiceHTML) return;
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+    });
 
-    const printWindow = window.open('', 'InvoicePrint', 'width=900,height=700');
-    if (!printWindow) {
-      alert('Please allow pop-ups to print the invoice');
-      return;
-    }
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Invoice #${printInvoice.id}</title>
-          <style>
-            * { box-sizing: border-box; margin: 0; padding: 0; }
-            body {
-              font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-              color: #1e293b;
-              background: white;
-              padding: 40px;
-              max-width: 800px;
-              margin: 0 auto;
-            }
-            @media print {
-              body { padding: 0; }
-              @page { size: A4; margin: 15mm; }
-            }
-          </style>
-        </head>
-        <body>
-          ${invoiceHTML}
-          <script>
-            setTimeout(() => { window.print(); }, 200);
-          </script>
-        </body>
-      </html>
-    `);
-
-    printWindow.document.close();
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    pdf.save(`Invoice_${printInvoice?.id || 'unknown'}.pdf`);
   };
 
   const getStatusColor = (status) => {
@@ -255,7 +231,7 @@ export default function Billing() {
                     <TableCell>{inv.description || '—'}</TableCell>
                     <TableCell>{new Date(inv.created_at).toLocaleDateString()}</TableCell>
                     <TableCell align="center">
-                      <IconButton onClick={() => handlePrint(inv)} title="Print Invoice" sx={{ color: '#008793', '&:hover': { bgcolor: '#e0f7fa' } }}>
+                      <IconButton onClick={() => handlePrint(inv)} title="View Invoice" sx={{ color: '#008793', '&:hover': { bgcolor: '#e0f7fa' } }}>
                         <PrintIcon />
                       </IconButton>
                       {canModify && (
@@ -295,9 +271,7 @@ export default function Billing() {
         onClose={handleDeleteCancel}
         PaperProps={{ sx: { borderRadius: 4, p: 1 } }}
       >
-        <DialogTitle sx={{ fontWeight: 700, color: '#d32f2f' }}>
-          Confirm Deletion
-        </DialogTitle>
+        <DialogTitle sx={{ fontWeight: 700, color: '#d32f2f' }}>Confirm Deletion</DialogTitle>
         <DialogContent>
           <Typography>Are you sure you want to permanently delete this invoice? This action cannot be undone.</Typography>
         </DialogContent>
@@ -311,7 +285,7 @@ export default function Billing() {
         </DialogActions>
       </Dialog>
 
-      {/* Print Preview Dialog */}
+      {/* Print Preview Dialog – now with Download PDF option */}
       <Dialog
         open={!!printInvoice}
         onClose={closePrintDialog}
@@ -336,17 +310,11 @@ export default function Billing() {
         <Divider />
 
         <DialogContent sx={{ p: 0, bgcolor: '#f5f7fb' }}>
-          {/* Instruction to remove headers/footers when printing */}
-          <Alert severity="info" sx={{ mx: 3, mt: 2, borderRadius: 2 }}>
-            To get a clean PDF, please <strong>uncheck “Headers and footers”</strong> in the print dialog.
-          </Alert>
-
           {printInvoice && printPatient && (
-            <Box ref={printRef} id="print-area">
+            <Box id="print-area" sx={{ m: 3 }}>
               <Paper
                 elevation={0}
                 sx={{
-                  m: 3,
                   p: 4,
                   borderRadius: 3,
                   backgroundColor: '#fff',
@@ -510,21 +478,17 @@ export default function Billing() {
           </Button>
           <Button
             variant="contained"
-            onClick={handlePrintInvoice}
-            startIcon={<PrintIcon />}
+            onClick={handleDownloadPDF}
+            startIcon={<PictureAsPdfIcon />}
             sx={{
               borderRadius: 2,
               textTransform: 'none',
               fontWeight: 600,
-              background: 'linear-gradient(135deg, #004d7a 0%, #008793 100%)',
-              boxShadow: '0 4px 12px rgba(0,141,145,0.3)',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #003a5c 0%, #006b7a 100%)',
-                boxShadow: '0 6px 16px rgba(0,141,145,0.4)',
-              },
+              background: '#2e7d32',
+              '&:hover': { background: '#1b5e20' },
             }}
           >
-            Print Invoice
+            Download PDF
           </Button>
         </DialogActions>
       </Dialog>
