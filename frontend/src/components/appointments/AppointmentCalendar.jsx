@@ -22,6 +22,12 @@ const localizer = dateFnsLocalizer({
 // Cambodia time zone
 const TIMEZONE = 'Asia/Phnom_Penh';
 
+// Parse an appointment_time string (ISO or naïve) as UTC
+const toUTCDate = (timeString) => {
+  const clean = timeString.endsWith('Z') ? timeString : timeString + 'Z';
+  return new Date(clean);
+};
+
 export default function AppointmentCalendar({ appointments, patients, doctors }) {
   const getPatientName = (patientId) => {
     const patient = patients.find(p => p.id === patientId);
@@ -33,10 +39,9 @@ export default function AppointmentCalendar({ appointments, patients, doctors })
     return doctor ? `Dr. ${doctor.first_name} ${doctor.last_name}` : `Doctor ${doctorId}`;
   };
 
-  // Build events – keep the start/end as Date objects (UTC instant)
+  // Build events – all times treated as UTC instants
   const events = appointments.map((a) => {
-    // Assume appointment_time is an ISO string in UTC (e.g. "2026-06-15T09:00:00Z")
-    const start = new Date(a.appointment_time);
+    const start = toUTCDate(a.appointment_time);
     const end = new Date(start.getTime() + 30 * 60 * 1000); // 30‑min appointments
 
     return {
@@ -50,7 +55,7 @@ export default function AppointmentCalendar({ appointments, patients, doctors })
   return (
     <Box>
       <Typography variant="h6" fontWeight={600} color="#004d7a" mb={2}>
-        Appointment Calendar (Cambodia Time)
+        Appointment Calendar
       </Typography>
       <Calendar
         localizer={localizer}

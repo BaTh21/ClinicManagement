@@ -29,6 +29,9 @@ import { getDoctors } from '../services/doctor';
 import AppointmentForm from '../components/appointments/AppointmentForm';
 import AppointmentCalendar from '../components/appointments/AppointmentCalendar';
 import { useAuth } from '../context/AuthContext';
+import { formatInTimeZone } from 'date-fns-tz'; // NEW import
+
+const TIMEZONE = 'Asia/Phnom_Penh'; // Cambodia timezone
 
 export default function Appointments() {
   const { user } = useAuth();
@@ -120,6 +123,13 @@ export default function Appointments() {
   const getDoctorName = (doctorId) => {
     const doctor = doctors.find(d => d.id === doctorId);
     return doctor ? `Dr. ${doctor.first_name} ${doctor.last_name}` : `Doctor ${doctorId}`;
+  };
+
+  // Helper to format appointment time in Cambodia timezone
+  const formatAppointmentTime = (isoString) => {
+    // Ensure the string is treated as UTC (if no 'Z', append it)
+    const date = new Date(isoString.endsWith('Z') ? isoString : isoString + 'Z');
+    return formatInTimeZone(date, TIMEZONE, 'PPpp'); // e.g. "Jun 15, 2026, 9:00:00 AM"
   };
 
   const canAdd = user?.role === 'admin' || user?.role === 'receptionist';
@@ -249,7 +259,7 @@ export default function Appointments() {
                       <TableCell>{a.id}</TableCell>
                       <TableCell>{getPatientName(a.patient_id)}</TableCell>
                       <TableCell>{getDoctorName(a.doctor_id)}</TableCell>
-                      <TableCell>{new Date(a.appointment_time).toLocaleString()}</TableCell>
+                      <TableCell>{formatAppointmentTime(a.appointment_time)}</TableCell>
                       <TableCell>
                         <Chip
                           label={a.status}
@@ -303,7 +313,11 @@ export default function Appointments() {
         maxWidth="sm"
         PaperProps={{ sx: { borderRadius: 4 } }}
       >
-        <AppointmentForm appointment={editingAppointment} onClose={handleClose} />
+        <AppointmentForm
+          key={editingAppointment ? editingAppointment.id : 'new'}
+          appointment={editingAppointment}
+          onClose={handleClose}
+        />
       </Dialog>
 
       {/* Delete Confirmation Dialog */}

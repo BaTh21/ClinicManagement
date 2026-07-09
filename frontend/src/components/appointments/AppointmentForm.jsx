@@ -51,13 +51,18 @@ export default function AppointmentForm({ appointment, onClose }) {
     fetchOptions();
 
     if (appointment) {
+      // Parse appointment_time as UTC to avoid timezone misinterpretation
+      const timeString = appointment.appointment_time;
+      const utcDate = new Date(
+        timeString.endsWith('Z') ? timeString : timeString + 'Z'
+      );
+
       setForm({
         ...appointment,
-        appointment_time: new Date(appointment.appointment_time),
+        appointment_time: isNaN(utcDate.getTime()) ? new Date() : utcDate,
       });
     }
   }, [appointment]);
-
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     if (error) setError('');
