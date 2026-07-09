@@ -3,7 +3,7 @@ import {
   Box, Button, Paper, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, IconButton, Dialog, Typography, Chip,
   DialogTitle, DialogContent, DialogActions, CircularProgress,
-  Divider,
+  Divider, Alert,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -12,7 +12,7 @@ import PrintIcon from '@mui/icons-material/Print';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import { getInvoices, deleteInvoice } from '../services/invoice';
 import { getPatient, getPatients } from '../services/patient';
-import { getMedicalRecords } from '../services/medicalRecord';  // NEW import
+import { getMedicalRecords } from '../services/medicalRecord';
 import InvoiceForm from '../components/billing/InvoiceForm';
 import { useAuth } from '../context/AuthContext';
 
@@ -25,7 +25,7 @@ export default function Billing() {
   const [editingInvoice, setEditingInvoice] = useState(null);
   const [printInvoice, setPrintInvoice] = useState(null);
   const [printPatient, setPrintPatient] = useState(null);
-  const [medicalRecords, setMedicalRecords] = useState([]); // NEW state
+  const [medicalRecords, setMedicalRecords] = useState([]);
   const printRef = useRef();
 
   // Delete confirmation state
@@ -103,7 +103,6 @@ export default function Billing() {
       setPrintPatient(patientRes.data);
       setPrintInvoice(invoice);
 
-      // FETCH MEDICAL RECORDS for the patient
       const recordsRes = await getMedicalRecords({ patient_id: invoice.patient_id });
       setMedicalRecords(recordsRes.data || []);
     } catch (err) {
@@ -117,8 +116,50 @@ export default function Billing() {
     setMedicalRecords([]);
   };
 
-  const handlePrintDialogPrint = () => {
-    window.print();
+  // Print via a new window – only the invoice appears, but headers/footers are browser‑dependent
+  const handlePrintInvoice = () => {
+    if (!printInvoice || !printPatient) return;
+
+    const invoiceHTML = document.getElementById('print-area')?.innerHTML;
+    if (!invoiceHTML) return;
+
+    const printWindow = window.open('', 'InvoicePrint', 'width=900,height=700');
+    if (!printWindow) {
+      alert('Please allow pop-ups to print the invoice');
+      return;
+    }
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Invoice #${printInvoice.id}</title>
+          <style>
+            * { box-sizing: border-box; margin: 0; padding: 0; }
+            body {
+              font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+              color: #1e293b;
+              background: white;
+              padding: 40px;
+              max-width: 800px;
+              margin: 0 auto;
+            }
+            @media print {
+              body { padding: 0; }
+              @page { size: A4; margin: 15mm; }
+            }
+          </style>
+        </head>
+        <body>
+          ${invoiceHTML}
+          <script>
+            setTimeout(() => { window.print(); }, 200);
+          </script>
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
   };
 
   const getStatusColor = (status) => {
@@ -133,7 +174,6 @@ export default function Billing() {
   const isAdmin = user?.role === 'admin';
   const canModify = isAdmin;
 
-  // Format date for the professional invoice
   const formatDate = (dateString) =>
     new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -271,9 +311,7 @@ export default function Billing() {
         </DialogActions>
       </Dialog>
 
-      {/* ────────────────────────────────────────────── */}
-      {/*  PROFESSIONAL PRINT INVOICE DIALOG           */}
-      {/* ────────────────────────────────────────────── */}
+      {/* Print Preview Dialog */}
       <Dialog
         open={!!printInvoice}
         onClose={closePrintDialog}
@@ -281,9 +319,7 @@ export default function Billing() {
         fullWidth
         PaperProps={{ sx: { borderRadius: 4, overflow: 'hidden' } }}
       >
-        {/* Header – will be hidden when printing */}
         <DialogTitle
-          className="no-print"
           sx={{
             background: 'linear-gradient(135deg, #004d7a 0%, #008793 100%)',
             color: '#fff',
@@ -297,21 +333,16 @@ export default function Billing() {
           <Typography variant="h6" fontWeight={700}>Invoice Preview</Typography>
         </DialogTitle>
 
-        <Divider className="no-print" />
+        <Divider />
 
         <DialogContent sx={{ p: 0, bgcolor: '#f5f7fb' }}>
-          {/* Print styles hidden from screen, active only when printing */}
-          <style>{`
-            @media print {
-              .no-print { display: none !important; }
-              body { background: white; }
-              .print-area { padding: 0 !important; margin: 0 !important; box-shadow: none !important; }
-            }
-          `}</style>
+          {/* Instruction to remove headers/footers when printing */}
+          <Alert severity="info" sx={{ mx: 3, mt: 2, borderRadius: 2 }}>
+            To get a clean PDF, please <strong>uncheck “Headers and footers”</strong> in the print dialog.
+          </Alert>
 
           {printInvoice && printPatient && (
             <Box ref={printRef} id="print-area">
-              {/* Professional Invoice Template – same as before */}
               <Paper
                 elevation={0}
                 sx={{
@@ -365,7 +396,6 @@ export default function Billing() {
                         </span>
                       </div>
                     </div>
-                    {/* Patient Card */}
                     <div style={{
                       background: '#f0f8ff',
                       borderRadius: 12,
@@ -474,14 +504,13 @@ export default function Billing() {
           )}
         </DialogContent>
 
-        {/* Footer buttons – also hidden when printing */}
-        <DialogActions className="no-print" sx={{ px: 3, pb: 2, bgcolor: '#f5f7fb' }}>
+        <DialogActions sx={{ px: 3, pb: 2, bgcolor: '#f5f7fb' }}>
           <Button onClick={closePrintDialog} variant="outlined" sx={{ borderRadius: 2, textTransform: 'none' }}>
             Close
           </Button>
           <Button
             variant="contained"
-            onClick={handlePrintDialogPrint}
+            onClick={handlePrintInvoice}
             startIcon={<PrintIcon />}
             sx={{
               borderRadius: 2,
