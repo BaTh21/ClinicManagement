@@ -6,11 +6,10 @@ import parse from 'date-fns/parse';
 import startOfWeek from 'date-fns/startOfWeek';
 import getDay from 'date-fns/getDay';
 import enUS from 'date-fns/locale/en-US';
+import { formatInTimeZone } from 'date-fns-tz';   // NEW import
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
-const locales = {
-  'en-US': enUS,
-};
+const locales = { 'en-US': enUS };
 
 const localizer = dateFnsLocalizer({
   format,
@@ -19,6 +18,9 @@ const localizer = dateFnsLocalizer({
   getDay,
   locales,
 });
+
+// Cambodia time zone
+const TIMEZONE = 'Asia/Phnom_Penh';
 
 export default function AppointmentCalendar({ appointments, patients, doctors }) {
   const getPatientName = (patientId) => {
@@ -31,17 +33,24 @@ export default function AppointmentCalendar({ appointments, patients, doctors })
     return doctor ? `Dr. ${doctor.first_name} ${doctor.last_name}` : `Doctor ${doctorId}`;
   };
 
-  const events = appointments.map((a) => ({
-    id: a.id,
-    title: `${getPatientName(a.patient_id)} – ${getDoctorName(a.doctor_id)}`,
-    start: new Date(a.appointment_time),
-    end: new Date(new Date(a.appointment_time).getTime() + 30 * 60000),
-  }));
+  // Build events – keep the start/end as Date objects (UTC instant)
+  const events = appointments.map((a) => {
+    // Assume appointment_time is an ISO string in UTC (e.g. "2026-06-15T09:00:00Z")
+    const start = new Date(a.appointment_time);
+    const end = new Date(start.getTime() + 30 * 60 * 1000); // 30‑min appointments
+
+    return {
+      id: a.id,
+      title: `${getPatientName(a.patient_id)} – ${getDoctorName(a.doctor_id)}`,
+      start,
+      end,
+    };
+  });
 
   return (
     <Box>
       <Typography variant="h6" fontWeight={600} color="#004d7a" mb={2}>
-        Appointment Calendar
+        Appointment Calendar (Cambodia Time)
       </Typography>
       <Calendar
         localizer={localizer}
@@ -60,6 +69,17 @@ export default function AppointmentCalendar({ appointments, patients, doctors })
             fontWeight: 500,
           },
         })}
+        // Custom formats – all times shown in Cambodia time
+        formats={{
+          timeGutterFormat: (date, culture, localizer) =>
+            formatInTimeZone(date, TIMEZONE, 'HH:mm'),
+          eventTimeRangeFormat: ({ start, end }, culture, localizer) =>
+            `${formatInTimeZone(start, TIMEZONE, 'HH:mm')} – ${formatInTimeZone(end, TIMEZONE, 'HH:mm')}`,
+          dayHeaderFormat: (date, culture, localizer) =>
+            formatInTimeZone(date, TIMEZONE, 'EEEE, MMM d'),
+          dayRangeHeaderFormat: ({ start, end }, culture, localizer) =>
+            `${formatInTimeZone(start, TIMEZONE, 'MMM d')} – ${formatInTimeZone(end, TIMEZONE, 'MMM d, yyyy')}`,
+        }}
       />
     </Box>
   );
